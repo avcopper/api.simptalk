@@ -42,7 +42,7 @@ class Block extends Controller
 
             // TODO добавить пометку всех сообщений удаленными
 
-            if ($this->user->save() && $this->userSession->save() && $userBlocks->save()) Response::result(200, true);
+            if ($this->user->save() && $this->userSession->save() && $userBlocks->save()) (new Response(200, true))->send();
             else throw new UserException('Saving error...', 400);
         }
     }

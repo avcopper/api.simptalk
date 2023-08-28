@@ -45,7 +45,7 @@ class Auth
             $userSession = UserSession::get(['token' => $jwt]);
             if (!empty($userSession->userId)) $user = User::get(['id' => $userSession->userId]);
         } catch (\Exception $e) {
-            Response::result(401, false, $e->getMessage());
+            (new Response(401, false, $e->getMessage()))->send();
         }
 
         return
@@ -219,7 +219,7 @@ class Auth
 
         if ($this->userSession->token && $this->userSession->save()) {
             ModelUserSession::clearFailedAttempts($this->user->login);
-            Response::result(200, true, 'OK', [], $this->userSession->token);
+            (new Response(200, true, 'OK', [], $this->userSession->token))->send();
         }
     }
 
@@ -233,7 +233,8 @@ class Auth
 
         if ($this->userSession->token && $this->userSession->save()) {
             ModelUserSession::clearFailedAttempts($this->user->login);
-            Response::result(200, true, 'OK', ['user' => $this->user], $this->userSession->token);
+
+            (new Response(200, true, 'OK', ['user' => $this->user], $this->userSession->token))->send();
         }
     }
 

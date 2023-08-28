@@ -13,7 +13,7 @@ class ErrorSupervisor
 
     public function OtherErrorCatcher($errno, $errstr, $errfile = null, $errline = null)
     {
-        Response::result(500, false, $errstr);
+        (new Response(500, false, $errstr))->send();
     }
 
     public function FatalErrorCatcher()
@@ -22,7 +22,7 @@ class ErrorSupervisor
         if (!empty($error) && in_array($error['type'], [E_ERROR, E_PARSE, E_COMPILE_ERROR, E_CORE_ERROR])) {
             ob_end_clean();    // сбросить буфер, завершить работу буфера
 
-            Response::result(500, false, 'Undefined error');
+            (new Response(500, false, 'Undefined error'))->send();
             // контроль критических ошибок:
             // - записать в лог
             // - вернуть заголовок 500

@@ -20,7 +20,7 @@ Route::parseUrl($_SERVER['REQUEST_URI']);
 try {
     Route::startApi();
 } catch (Exception $e) {
-    Response::result($e->getCode(), false, $e->getMessage());
+    (new Response($e->getCode(), false, $e->getMessage()))->send();
 }
 
 session_destroy();

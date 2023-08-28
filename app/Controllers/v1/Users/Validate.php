@@ -20,7 +20,7 @@ class Validate extends Controller
 
     protected function actionDefault()
     {
-        Response::result(200, true, 'OK', [], $this->token);
+        (new Response(200, true, 'OK', [], $this->token))->send();
 
 //        curl --location 'http://simptalk/api/v1/users/validate/' \
 //        --header 'Content-Type: application/json' \
