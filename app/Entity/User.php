@@ -37,13 +37,13 @@ class User extends Entity
     {
         switch (true) {
             case !empty($params['id']):
-                $user = \Models\User::getById($params['id'], $params['active'] ?? true, false);
+                $user = \Models\User::getById($params['id'], $params['active'] ?? true);
                 break;
             case !empty($params['login']):
-                $user = \Models\User::getByLogin($params['login'], $params['active'] ?? true, false);
+                $user = \Models\User::getByLogin($params['login'], $params['active'] ?? true);
                 break;
             case !empty($params['token']):
-                $user = \Models\User::getByToken($params['token'], $params['active'] ?? true, false);
+                $user = \Models\User::getByToken($params['token'], $params['active'] ?? true);
                 break;
         }
 

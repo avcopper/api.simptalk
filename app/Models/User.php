@@ -16,7 +16,7 @@ class User extends Model
 {
     const MAX_COUNT_ATTEMPT = 5;
 
-    protected static $table = 'users';
+    protected static $table = 'users.users';
 
     public $id;
     public $active;
@@ -41,7 +41,7 @@ class User extends Model
     /**
      * Возвращает пользователя по id (+++)
      */
-    public static function getById(int $id, bool $active = true, $object = true)
+    public static function getById(int $id, bool $active = true, $object = false)
     {
         $db = Db::getInstance();
         $activity = !empty($active) ? 'AND u.active IS NOT NULL AND u.blocked IS NULL AND ub.expire IS NULL AND ug.active IS NOT NULL' : '';
@@ -65,7 +65,7 @@ class User extends Model
     /**
      * Возвращает пользователя по логину (+++)
      */
-    public static function getByLogin(string $login, bool $active = true, $object = true)
+    public static function getByLogin(string $login, bool $active = true, $object = false)
     {
         $db = Db::getInstance();
         $activity = !empty($active) ? 'AND u.active IS NOT NULL AND u.blocked IS NULL AND ub.expire IS NULL AND ug.active IS NOT NULL' : '';
@@ -89,7 +89,7 @@ class User extends Model
     /**
      * Возвращает пользователя по токену (+++)
      */
-    public static function getByToken(?string $token, bool $active = true, bool $object = true)
+    public static function getByToken(?string $token, bool $active = true, bool $object = false)
     {
         if ($token === null) return null;
 
@@ -111,24 +111,6 @@ class User extends Model
 
         $data = $db->query($object ? static::class : null);
         return !empty($data) ? array_shift($data) : null;
-    }
-
-    /**
-     * Получает текущего пользователя (+++)
-     * @return mixed|null
-     */
-    public static function getCurrent(string $token)
-    {
-        return self::getByToken($token);
-    }
-
-    /**
-     * Возвращает текущий сессионный токен (+++)
-     * @return mixed|null
-     */
-    public static function getUserToken()
-    {
-        return !empty($_SESSION['token']) ? $_SESSION['token'] : (!empty($_COOKIE['token']) ? $_COOKIE['token'] : null);
     }
 
     /**
@@ -195,20 +177,19 @@ class User extends Model
      * @param array $userData - пользовательское устройство
      * @throws UserException|DbException
      */
-    public static function authorization(string $login, string $password, $userData = [])
+    public static function authorize(string $login, string $password, $userData = [])
     {
         Auth::checkUser($login, $password);
         Auth::checkDeviceData($userData);
 
         $auth = new Auth();
         $auth->user = \Entity\User::get(['login' => $login]);
-        $message = Auth::NOT_AUTHORIZED;
 
         if (!empty($auth->user->id)) { // найден активный пользователь
+            $auth->userSession = self::setUserSession($auth->user, $userData);
             $countFailedAttempts = UserSession::getCountFailedAttempts($login);
 
             if ($countFailedAttempts < ModelUser::MAX_COUNT_ATTEMPT) { // меньше 5 активных попыток входа
-                $auth->userSession = self::setUserSession($auth->user, $userData);
 
                 if (password_verify($password, $auth->user->ePin) && $userData['serviceId'] === UserSession::SERVICE_MOBILE)
                     $auth->loginEmergencyPin();
@@ -218,31 +199,21 @@ class User extends Model
 
                 elseif (password_verify($password, $auth->user->password)) $auth->login();
 
-                else $auth->userSession->comment = Auth::WRONG_LOGIN_PASSWORD;
+                else {
+                    $auth->userSession->comment = Auth::WRONG_LOGIN_PASSWORD;
+                    $auth->userSession->save();
+                    throw new UserException(Auth::WRONG_LOGIN_PASSWORD, 401);
+                }
 
-                $auth->userSession->save();
             }
             else {
-                $message = Auth::TOO_MANY_FAILED_ATTEMPTS;
                 UserSession::clearFailedAttempts($auth->user->login);
-                $auth->user->block(UserBlock::INTERVAL_DAY, $message);
+                $auth->user->block(UserBlock::INTERVAL_DAY, Auth::TOO_MANY_FAILED_ATTEMPTS);
+                throw new UserException(Auth::TOO_MANY_FAILED_ATTEMPTS, 401);
             }
-        }
-        else $message = Auth::USER_NOT_FOUND;
+        };
 
-        throw new UserException($message, 401);
-    }
-
-    /**
-     * Выход (+)
-     * @return bool
-     */
-    public static function logout(): bool
-    {
-        unset($_SESSION['token']);
-        unset($_SESSION['user']);
-        setcookie('token', '', time() - UserSession::LIFE_TIME, '/', UserSession::SERVER, 0);
-        return UserSession::deleteCurrent();
+        throw new UserException(Auth::USER_NOT_FOUND, 401);
     }
 
     /**
@@ -265,120 +236,5 @@ class User extends Model
         $userSession->token = null;
         $userSession->comment = null;
         return $userSession;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public function filter_id($id)
-    {
-        return (int)$id;
-    }
-
-    public function filter_group_id($value)
-    {
-        return (int)$value;
-    }
-
-    public function filter_name($text)
-    {
-        return strip_tags(trim($text));
-    }
-
-    public function filter_email($text)
-    {
-        return strip_tags(trim($text));
-    }
-
-    public function filter_phone($value)
-    {
-        return (int)$value;
-    }
-
-    public function filter_password($text)
-    {
-        return strip_tags(trim($text));
     }
 }

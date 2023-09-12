@@ -22,7 +22,7 @@ class Login extends Controller
     {
         if (Request::isPost()) {
             $userData = User::getUserDeviceFromApi();
-            User::authorization($userData['login'], $userData['password'], $userData);
+            User::authorize($userData['login'], $userData['password'], $userData);
         }
 
 //        curl --location 'http://auth/v1/users/login/' \

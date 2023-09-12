@@ -35,22 +35,33 @@ class Auth
      * @param $jwt - токен
      * @param $data - пользовательские данные
      * @return bool
-     * @throws UserException
      */
     public static function checkAuthorization($jwt, $data)
     {
         try {
             $token = JWT::decode($jwt, new Key(ModelUserSession::KEY, 'HS512'));
-            $userData = self::decodeUserData($data);
             $userSession = UserSession::get(['token' => $jwt]);
-            if (!empty($userSession->userId)) $user = User::get(['id' => $userSession->userId]);
-        } catch (\Exception $e) {
+            $userData = self::decodeUserData($data);
+
+            if (!empty($userSession->userId)) {
+                $user = User::get(['id' => $userSession->userId]);
+
+                if (!empty($user->id) && self::checkToken($token ?? null) && self::checkUserData($userData, $token) &&
+                    self::checkUserSession($userSession, $token))
+                {
+                    return true;
+                }
+                else {
+                    ModelUserSession::deleteCurrent($jwt);
+                    return false;
+                }
+            }
+        }
+        catch (\Exception $e) {
             (new Response(401, false, $e->getMessage()))->send();
         }
 
-        return
-            !empty($user->id) && self::checkToken($token ?? null) && self::checkUserData($userData, $token) &&
-            self::checkUserSession($userSession, $token);
+        return false;
     }
 
     /**
@@ -74,17 +85,6 @@ class Auth
     }
 
     /**
-     * Проверяет данные пользователя из запроса (+++)
-     * @param $data - массив данных
-     * @return bool
-     * @throws UserException
-     */
-    public static function checkData($data)
-    {
-        return self::checkUser($data['user']['login'], $data['user']['password']) && self::checkDeviceData($data);
-    }
-
-    /**
      * Проверяет наличие логина/пароля в данных (+++)
      * @param $login - логин
      * @param $password - пароль
@@ -93,6 +93,7 @@ class Auth
      */
     public static function checkUser($login, $password)
     {
+        // TODO добавить проверку регулярками
         if (empty($login) || empty($password)) throw new UserException(self::WRONG_LOGIN_PASSWORD, 401);
         return true;
     }
@@ -189,10 +190,10 @@ class Auth
     {
         if (empty($userSession)) throw new UserException(self::NOT_AUTHORIZED, 401);
 
-        if ($token->iss !== \Models\UserSession::SERVER || $token->aud !== $userSession->login ||
+        if ($token->iss !== ModelUserSession::SERVER || $token->aud !== $userSession->login ||
             $token->data->id !== $userSession->userId || $token->data->serviceId !== $userSession->serviceId ||
             $token->data->ip !== $userSession->ip || $token->data->device !== $userSession->device
-        ) throw new UserException('Токен не принадлежит данному пользователю');
+        ) throw new UserException(self::WRONG_TOKEN);
 
         return true;
     }
@@ -225,6 +226,7 @@ class Auth
 
     /**
      * Вход по паролю
+     * @throws \Exceptions\DbException
      */
     public function login()
     {

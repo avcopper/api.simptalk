@@ -11,9 +11,9 @@ use Exceptions\DbException;
 class UserSession extends Model
 {
     const SERVER = 'simptalk'; // сервер токена
-    const SERVICES = [1, 2]; // сервисы, использующие авторизацию: 1 - мобильные, 2 - сайт
     const SERVICE_MOBILE = 1; // сервис мобильный
     const SERVICE_SITE = 2; // сервис сайт
+    const SERVICES = [self::SERVICE_MOBILE, self::SERVICE_SITE]; // сервисы, использующие авторизацию
     const LIFE_TIME = 60 * 60 * 24; // время жизни токена
     const KEY = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl7rrc5Co4lgcrq6xVeMt'.
                 't/RAJ9w0TZab8451RgSd+TyMncLazFZrJOOnL9/Sif3McH3wXzkMo0pjdIqEZi2j'.
@@ -59,33 +59,6 @@ class UserSession extends Model
     }
 
     /**
-     * Генерирует токен для пользователя (+++)
-     * @param \Entity\User $user - пользователь
-     * @param \Entity\UserSession $userSession - сессия пользователя
-     * @param int $timeStamp - метка времени
-     * @return string
-     */
-    public function getToken(\Entity\User $user, \Entity\UserSession $userSession, int $timeStamp)
-    {
-        $data = [
-            "iss" => self::SERVER, // адрес или имя удостоверяющего центра
-            "aud" => $user->login, // имя клиента для которого токен выпущен
-            "iat" => $timeStamp, // время, когда был выпущен JWT
-            "nbf" => $timeStamp, // время, начиная с которого может быть использован (не раньше, чем)
-            "exp" => $timeStamp + UserSession::LIFE_TIME, // время истечения срока действия токена
-            "data" => [
-                "id"         => $userSession->userId,
-                "serviceId"  => $userSession->serviceId,
-                "ip"         => $userSession->ip,
-                "device"     => $userSession->device,
-                "expired"    => $userSession->expire
-            ]
-        ];
-
-        return JWT::encode($data, self::KEY, 'HS512');
-    }
-
-    /**
      * Возвращает количество неудачных попыток залогиниться (+++)
      * @param $login - логин
      * @return int|mixed
@@ -115,12 +88,40 @@ class UserSession extends Model
     }
 
     /**
+     * Генерирует токен для пользователя (+++)
+     * @param \Entity\User $user - пользователь
+     * @param \Entity\UserSession $userSession - сессия пользователя
+     * @param int $timeStamp - метка времени
+     * @return string
+     */
+    public function getToken(\Entity\User $user, \Entity\UserSession $userSession, int $timeStamp)
+    {
+        $data = [
+            "iss" => self::SERVER, // адрес или имя удостоверяющего центра
+            "aud" => $user->login, // имя клиента для которого токен выпущен
+            "iat" => $timeStamp, // время, когда был выпущен JWT
+            "nbf" => $timeStamp, // время, начиная с которого может быть использован (не раньше, чем)
+            "exp" => $timeStamp + UserSession::LIFE_TIME, // время истечения срока действия токена
+            "data" => [
+                "id"         => $userSession->userId,
+                "serviceId"  => $userSession->serviceId,
+                "ip"         => $userSession->ip,
+                "device"     => $userSession->device,
+                "expired"    => $userSession->expire
+            ]
+        ];
+
+        return JWT::encode($data, self::KEY, 'HS512');
+    }
+
+    /**
      * Удаляет текущую сессию пользователя (разлогинивает) (+++)
+     * @param null $token - токен
      * @return bool
      */
-    public static function deleteCurrent()
+    public static function deleteCurrent($token = null)
     {
-        $token = User::getUserToken();
+        if (empty($token)) $token = User::getRequestToken();
         $userSession = \Entity\UserSession::get(['token' => $token]);
 
         if (!empty($userSession->id)) {
@@ -135,89 +136,5 @@ class UserSession extends Model
         } else Access::getInstance()->error('Не обнаружена текущая сессия для удаления');
 
         return false;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public function filter_id($id)
-    {
-        return (int)$id;
-    }
-
-    public function filter_user_id($value)
-    {
-        return (int)$value;
-    }
-
-    public function filter_ip($text)
-    {
-        return strip_tags(trim($text));
-    }
-
-    public function filter_user_agent($text)
-    {
-        return strip_tags(trim($text));
-    }
-
-    public function filter_session_hash($text)
-    {
-        return strip_tags(trim($text));
-    }
-
-    public function filter_cookie_hash($text)
-    {
-        return strip_tags(trim($text));
     }
 }
