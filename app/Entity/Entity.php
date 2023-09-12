@@ -4,7 +4,7 @@ namespace Entity;
 
 abstract class Entity
 {
-    protected function init(array $data, array $properties = [])
+    public function init(array $data, array $properties = [])
     {
         $fields = $properties ?: $this->getFields();
 
@@ -27,7 +27,16 @@ abstract class Entity
                         $this->$prop = (bool) $data[$key];
                         break;
                     case 'datetime':
-                        $this->$prop = !empty($data[$key]) ? \DateTime::createFromFormat('Y-m-d H:i:s', $data[$key]) : null;
+                        $this->$prop =
+                            !empty($data[$key]) ?
+                                ($data[$key] instanceof \DateTime ?
+                                    $data[$key] :
+                                    (is_string($data[$key]) ?
+                                        \DateTime::createFromFormat('Y-m-d H:i:s', $data[$key]) :
+                                        (is_array($data[$key]) ?
+                                            \DateTime::__set_state($data[$key]) :
+                                            null))) :
+                                null;
                         break;
                     default:
                         $this->$prop = $data[$key];

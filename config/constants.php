@@ -1,10 +1,9 @@
 <?php
-use System\Config;
 
-const _ROOT = __DIR__ . '/..';
-const _APP = __DIR__ . '/../app';
-const _CONFIG = __DIR__ . '/../config';
-const _VENDOR = __DIR__ . '/../vendor';
-const _LOGS = __DIR__ . '/../logs';
-const _PUBLIC = __DIR__ . '/../public';
-define("CONFIG", Config::getInstance()->data);
+const DIR_ROOT = __DIR__ . DIRECTORY_SEPARATOR . '..';
+const DIR_APP = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'app';
+const DIR_CONFIG = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'config';
+const DIR_VENDOR = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'vendor';
+const DIR_LOGS = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs';
+const DIR_PUBLIC = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'public';
+const DIR_CERTIFICATES = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'certificates';
