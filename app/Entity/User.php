@@ -126,7 +126,6 @@ class User extends Entity
     public function block(int $time, ?string $reason = null)
     {
         $date = new DateTime();
-
         $userBlock = new UserBlock();
         $userBlock->user_id = $this->id;
         $userBlock->created = $date->format('Y-m-d H:i:s');
