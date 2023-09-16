@@ -1,11 +1,7 @@
 <?php
-
 namespace System;
 
-use Api\System\Response;
-use Exceptions\DbException;
 use Exceptions\NotFoundException;
-use Exceptions\ForbiddenException;
 
 /**
  * Class Route
@@ -16,6 +12,7 @@ class Route
     /**
      * Разбираем url на составные части и объявляем константу с ними
      * @param $uri
+     * @throws NotFoundException
      */
     public static function parseUrl($uri)
     {
@@ -29,7 +26,7 @@ class Route
         if (!empty($parts[0]) && mb_strtolower(mb_substr($parts[0], 0, 1)) === 'v' && is_numeric(mb_substr($parts[0], 1))) {
             define('API_VERSION', $parts[0]);
             unset($parts[0]);
-        } else new NotFoundException('Not found', 404);
+        } else throw new NotFoundException('Not found', 404);
 
         foreach ($parts as $part) {
             $elem = ucfirst(str_replace('-', '_', $part));
@@ -49,6 +46,9 @@ class Route
         define('URL', $urls); // [['name' => 'Personal', 'link' => 'personal'], ['name' => 'Subscriptions', 'link' => 'personal/subscriptions']]
     }
 
+    /**
+     * @throws NotFoundException
+     */
     public static function startApi()
     {
         $class  = null;  // класс контроллера
@@ -180,7 +180,7 @@ class Route
 
         } else {
             header('HTTP/1.1 404 Not Found', 404);
-            die;
+            throw new NotFoundException('Not found', 404);
         }
     }
 }
