@@ -1,9 +1,8 @@
 <?php
-
 namespace Exceptions;
 
 use Throwable;
-use System\Access;
+use System\Loggers\AccessLogger;
 
 /**
  * Class UserException
@@ -17,6 +16,6 @@ class UserException extends BaseException
     public function __construct($message = '', $code = 0, Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
-        Access::getInstance()->error($this);
+        AccessLogger::getInstance()->error($this);
     }
 }
