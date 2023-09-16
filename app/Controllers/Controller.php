@@ -1,9 +1,9 @@
 <?php
 namespace Controllers;
 
+use Entity\User;
+use Models\Model;
 use Entity\UserSession;
-use Models\User;
-use System\Auth;
 use System\ErrorSupervisor;
 use Models\User as ModelUser;
 use Exceptions\NotFoundException;
@@ -15,9 +15,9 @@ use Exceptions\ForbiddenException;
  */
 abstract class Controller
 {
-    protected $model;
-    protected $user;        // текущий пользователь
-    protected $token; // токен
+    protected Model $model;
+    protected ?User $user;        // текущий пользователь
+    protected ?string $token; // токен
     protected ?UserSession $userSession; // текущая сессия
 
     /**
@@ -37,7 +37,7 @@ abstract class Controller
         header("Cache-Control: no-store");
 
         new ErrorSupervisor();
-        $this->token = User::getRequestToken();
+        $this->token = ModelUser::getRequestToken();
         $this->userSession = new UserSession();
     }
 
