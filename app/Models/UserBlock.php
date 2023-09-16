@@ -1,13 +1,5 @@
 <?php
-
 namespace Models;
-
-use DateTime;
-use System\Db;
-use System\Access;
-use System\Logger;
-use Firebase\JWT\JWT;
-use Exceptions\DbException;
 
 class UserBlock extends Model
 {
