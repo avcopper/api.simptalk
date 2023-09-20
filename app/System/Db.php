@@ -23,7 +23,7 @@ class Db
     public function __construct()
     {
         $dbHost = CONFIG['db']['host'];
-        $dbName = CONFIG['db']['db_prefix'] . CONFIG['db']['db_name'];
+        $dbName = CONFIG['db']['dbprefix'] . CONFIG['db']['dbname'];
         $dsn = "mysql:host={$dbHost};dbname={$dbName}";
         try {
             $this->dbh = new \PDO(

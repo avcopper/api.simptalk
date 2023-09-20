@@ -8,7 +8,7 @@ use System\Loggers\AccessLogger;
 
 class UserSession extends Model
 {
-    const SERVER = 'simptalk'; // сервер токена
+    const SERVER = 'https://mesigo.net'; // сервер токена
     const SERVICE_MOBILE = 1; // сервис мобильный
     const SERVICE_SITE = 2; // сервис сайт
     const SERVICES = [self::SERVICE_MOBILE, self::SERVICE_SITE]; // сервисы, использующие авторизацию
@@ -21,7 +21,7 @@ class UserSession extends Model
                 'H2mCo6UjM9m8vVbkaaw5hNapjhHILOgN5UVcXGI6b3XoyKZwYX0hTpnImydmDGUJ'.
                 'XwIDAQAB'; // ключ для шифрования токена
 
-    protected static $table = 'auth.user_sessions';
+    protected static $db_table = 'users.user_sessions';
 
     public $id;         // id сессии
     public $active;     // активность сессии
@@ -41,16 +41,16 @@ class UserSession extends Model
      * @param bool $active - только активные или нет искать
      * @return false|mixed|null
      */
-    public static function getByToken(string $token, bool $active = true)
+    public static function getByToken(?string $token, bool $active = true)
     {
         $activity = !empty($active) ? 'AND u.active IS NOT NULL AND u.blocked IS NULL AND us.active IS NOT NULL AND us.expire > NOW()' : '';
         $db = Db::getInstance();
         $db->params = ['token' => $token];
         $db->sql = "
             SELECT us.id, us.active, us.user_id, u.login, us.service_id, s.name service, us.ip, us.device, us.log_in, us.expire, us.token
-            FROM " . self::$db_prefix . self::$table . " us 
-            LEFT JOIN " . self::$db_prefix . "auth.users u ON us.user_id = u.id 
-            LEFT JOIN " . self::$db_prefix . "auth.services s ON us.service_id = s.id 
+            FROM " . self::$db_prefix . self::$db_table . " us 
+            LEFT JOIN " . self::$db_prefix . "users.users u ON us.user_id = u.id 
+            LEFT JOIN " . self::$db_prefix . "users.services s ON us.service_id = s.id 
             WHERE us.token = :token {$activity}";
         $data = $db->query();
         return !empty($data) ? array_shift($data) : false;
@@ -66,7 +66,7 @@ class UserSession extends Model
     {
         $db = new Db();
         $db->params = ['login' => $login];
-        $db->sql = "SELECT count(id) count FROM " . self::$db_prefix . self::$table . " WHERE token IS NULL AND active IS NOT NULL AND login = :login";
+        $db->sql = "SELECT count(id) count FROM " . self::$db_prefix . self::$db_table . " WHERE token IS NULL AND active IS NOT NULL AND login = :login";
         $res = $db->query();
         return !empty($res) ? array_shift($res)['count'] : 0;
     }
@@ -81,7 +81,7 @@ class UserSession extends Model
     {
         $db = new Db();
         $db->params = ['login' => $login];
-        $db->sql = "UPDATE " . self::$db_prefix . self::$table . " SET active = NULL WHERE login = :login AND token IS NULL";
+        $db->sql = "UPDATE " . self::$db_prefix . self::$db_table . " SET active = NULL WHERE login = :login AND token IS NULL";
         return $db->query();
     }
 

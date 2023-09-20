@@ -1,4 +1,5 @@
 <?php
+
 namespace Models;
 
 use System\Db;
@@ -10,9 +11,8 @@ use Traits\Magic;
  */
 abstract class Model
 {
-    protected static $db_prefix = CONFIG['db']['db_prefix'];
-    protected static $db_name = CONFIG['db']['db_name'];
-    protected static $table = null;
+    protected static $db_prefix = CONFIG['db']['dbprefix'];
+    protected static $db_table = null;
 
     use Magic;
 
@@ -47,7 +47,7 @@ abstract class Model
     {
         $db = Db::getInstance();
         $activity = !empty($active) ? 'WHERE active IS NOT NULL' : '';
-        $db->sql = "SELECT * FROM " . self::$db_prefix . static::$table . " {$activity} ORDER BY {$order} " . strtoupper($sort);
+        $db->sql = "SELECT * FROM " . self::$db_prefix . static::$db_table . " {$activity} ORDER BY {$order} " . strtoupper($sort);
         $data = $db->query($object ? static::class : null);
         return $data ?? false;
     }
@@ -59,41 +59,12 @@ abstract class Model
      * @param bool $object
      * @return bool|mixed
      */
-    public static function getById(int $id, bool $active = true)
+    public static function getById(int $id, bool $active = true, bool $object = true)
     {
         $db = Db::getInstance();
         $where = !empty($active) ? ' AND active IS NOT NULL' : '';
         $db->params = ['id' => $id];
-        $db->sql = "SELECT * FROM " . self::$db_prefix . static::$table . " WHERE id = :id {$where}";
-        $data = $db->query();
-        return !empty($data) ? array_shift($data) : false;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Находит и возвращает одну запись из БД по полю и его значению
-     * @param string $field
-     * @param string $value
-     * @param bool $active
-     * @param bool $object
-     * @return array|false
-     */
-    public static function getByField(string $field, string $value, bool $active = true, bool $object = true)
-    {
-        $db = Db::getInstance();
-        $activity = !empty($active) ? ' AND active IS NOT NULL' : '';
-        $db->params = ['value' => $value];
-        $db->sql = "SELECT * FROM `" . self::$db_prefix . static::$table . "` WHERE {$field} = :value {$activity}";
+        $db->sql = "SELECT * FROM " . self::$db_prefix . static::$db_table . " WHERE id = :id {$where}";
         $data = $db->query($object ? static::class : null);
         return !empty($data) ? array_shift($data) : false;
     }
@@ -126,13 +97,14 @@ abstract class Model
         $cols = [];
         $db->params = [];
         foreach ($this as $key => $val) {
-            //if ($val === null) continue;
+            if ($val === null) continue;
+            if ($key === 'data') continue;
             $cols[] = $key;
             $db->params[$key] = $val;
         }
         $db->sql =  "
-            INSERT INTO " . self::$db_prefix . static::$table . " (" . implode(', ', $cols) . ") 
-            VALUES (" . ":" . implode(', :', $cols) . ")";
+            INSERT INTO " . self::$db_prefix . static::$db_table . " (" . implode(', ', $cols) . ") 
+            VALUES (" . ":" . implode(', :', $cols) . ")";//echo json_encode($db->sql);die;
         $res = $db->execute();
         return !empty($res) ? $db->lastInsertId() : false;
     }
@@ -147,10 +119,12 @@ abstract class Model
         $db->params = [];
         foreach ($this as $key => $val) {
             //if ($val === null) continue;
+            if ($key === 'data') continue;
             if ('id' !== $key) $binds[] = $key . ' = :' . $key;
             $db->params[$key] = $val;
         }
-        $db->sql = 'UPDATE ' . self::$db_prefix . static::$table . ' SET ' . implode(', ', $binds) . ' WHERE id = :id';
+        $db->sql = 'UPDATE ' . self::$db_prefix . static::$db_table . ' SET ' . implode(', ', $binds) . ' WHERE id = :id';
+
         return $db->execute() ? $this->id : false;
     }
 
@@ -162,7 +136,7 @@ abstract class Model
     {
         $db = Db::getInstance();
         $db->params = [':id' => $this->id];
-        $db->sql = "DELETE FROM " . self::$db_prefix . static::$table . " WHERE id = :id";
+        $db->sql = "DELETE FROM " . self::$db_prefix . static::$db_table . " WHERE id = :id";
         return $db->execute();
     }
 
@@ -173,7 +147,7 @@ abstract class Model
     public static function count()
     {
         $db = Db::getInstance();
-        $db->sql = "SELECT COUNT(*) count FROM " . self::$db_prefix . static::$table;
+        $db->sql = "SELECT COUNT(*) count FROM " . self::$db_prefix . static::$db_table;
         $data = $db->query(static::class);
         return !empty($data) ? (int)array_shift($data)->count : false;
     }

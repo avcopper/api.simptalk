@@ -3,8 +3,8 @@
 return [
     'db' => [
         'host'     => 'localhost',
-        'db_prefix' => 'talk_',
-        'db_name'   => 'auth',
+        'dbprefix' => 'talk_',
+        'dbname'   => 'mesigo',
         'user'     => 'root',
         'password' => 'root'
     ],
