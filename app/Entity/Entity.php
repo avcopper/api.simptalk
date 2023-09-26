@@ -2,8 +2,12 @@
 
 namespace Entity;
 
+use Traits\Magic;
+
 abstract class Entity
 {
+    use Magic;
+
     public function init(array $data, array $properties = [])
     {
         $fields = $properties ?: $this->getFields();

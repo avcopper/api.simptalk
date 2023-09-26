@@ -2,6 +2,7 @@
 namespace System;
 
 use Exceptions\NotFoundException;
+use Models\Message;
 
 /**
  * Class Route
