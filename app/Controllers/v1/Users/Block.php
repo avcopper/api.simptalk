@@ -13,9 +13,12 @@ use Controllers\Controller;
 
 class Block extends Controller
 {
+    /**
+     * @throws \Exceptions\UserException
+     */
     protected function before()
     {
-        if (!ModelUser::isAuthorized()) throw new UserException('Unauthorized', 401);
+        $this->checkAuthorization();
         header("Access-Control-Allow-Methods: POST");
         $this->model = new UserSession();
     }

@@ -3,9 +3,10 @@ namespace Controllers;
 
 use Entity\User;
 use Models\Model;
+use System\Auth;
 use Entity\UserSession;
-use System\ErrorSupervisor;
 use Models\User as ModelUser;
+use Exceptions\UserException;
 use Exceptions\NotFoundException;
 use Exceptions\ForbiddenException;
 
@@ -55,8 +56,8 @@ abstract class Controller
             if ($this->access($action)) {
                 if (method_exists($this, 'before')) $this->before();
 
-                if (!empty($param1) && !empty($param2)) $this->$action($param1, $param2);
-                elseif (!empty($param1)) $this->$action($param1);
+                if (!is_null($param1) && !is_null($param2)) $this->$action($param1, $param2);
+                elseif (!is_null($param1)) $this->$action($param1);
                 else $this->$action();
 
                 if (method_exists($this, 'after')) $this->after();
@@ -73,5 +74,14 @@ abstract class Controller
     protected function access($action):bool
     {
         return true;
+    }
+
+    /**
+     * Проверяет авторизавон ли пользователь
+     * @throws \Exceptions\UserException
+     */
+    protected function checkAuthorization()
+    {
+        if (!ModelUser::isAuthorized()) throw new UserException(Auth::NOT_AUTHORIZED, 401);
     }
 }

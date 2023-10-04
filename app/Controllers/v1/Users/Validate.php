@@ -14,7 +14,7 @@ class Validate extends Controller
      */
     protected function before()
     {
-        if (!ModelUser::isAuthorized()) throw new UserException(Auth::NOT_AUTHORIZED, 401);
+        $this->checkAuthorization();
         header("Access-Control-Allow-Methods: POST");
     }
 
