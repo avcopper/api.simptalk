@@ -66,4 +66,29 @@ class Friend extends Model
         $data = $db->query($object ? static::class : null);
         return !empty($data) ? array_shift($data) : null;
     }
+
+    public static function searchByLogin(string $login, int $user_id, bool $active = true, $object = true)
+    {
+        $prefix = self::$db_prefix;
+        $table = self::$db_table;
+
+        $db = Db::getInstance();
+        $notSelf = !empty($user_id) ? 'AND u.id <> :id' : '';
+        $activity = !empty($active) ? 'AND u.active IS NOT NULL AND u.blocked IS NULL AND ub.expire IS NULL AND ug.active IS NOT NULL' : '';
+
+        $db->params = ['login' => $login];
+        if (!empty($user_id)) $db->params['id'] = $user_id;
+
+        $db->sql = "
+            SELECT 
+                u.id, u.locked, u.need_request, u.login, u.name,  u.second_name, u.last_name 
+            FROM {$prefix}{$table} u 
+            LEFT JOIN {$prefix}users.user_groups ug ON u.group_id = ug.id 
+            LEFT JOIN {$prefix}users.user_blocks ub ON u.id = ub.user_id AND ub.expire > NOW() 
+            WHERE u.login LIKE CONCAT(:login, '', '%') {$notSelf} {$activity} 
+            ORDER BY u.id";
+
+        $data = $db->query($object ? static::class : null);
+        return $data ?: null;
+    }
 }
