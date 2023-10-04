@@ -8,10 +8,11 @@ abstract class Entity
 {
     use Magic;
 
-    public function init(array $data, array $properties = [])
+    public function init(?array $data)
     {
-        $fields = $properties ?: $this->getFields();
+        if (empty($data)) return null;
 
+        $fields = $this->getFields();
         foreach ($fields as $key => $field) {
             $prop = $field['field'];
             $type = $field['type'];

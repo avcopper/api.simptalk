@@ -1,6 +1,8 @@
 <?php
 namespace Entity;
 
+use DateTime;
+
 class Message extends Entity
 {
     public $id;
@@ -86,15 +88,6 @@ class Message extends Entity
 
     public function save()
     {
-        $user = new \Models\Message();
-        $user->id = $this->id;
-        $user->active = $this->isActive ? 1 : null;
-        $user->is_read = $this->isRead ? 1 : null;
-        $user->from_user_id = $this->messageFromUserId;
-        $user->to_user_id = $this->messageToUserId;
-        $user->message = $this->message;
-        $user->created = !empty($this->created) ? $this->created->format('Y-m-d H:i:s') : date('Y-m-d H:i:s');
-        $user->updated = date('Y-m-d H:i:s');
-        return $user->save();
+        return (new \Models\Message())->init($this)->save();
     }
 }

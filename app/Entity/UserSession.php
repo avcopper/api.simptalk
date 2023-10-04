@@ -46,18 +46,6 @@ class UserSession extends Entity
 
     public function save()
     {
-        $userSession = new \Models\UserSession();
-        $userSession->id = $this->id;
-        $userSession->active = $this->isActive ? 1 : null;
-        $userSession->login = $this->login;
-        $userSession->user_id = $this->userId;
-        $userSession->service_id = $this->serviceId;
-        $userSession->ip = $this->ip;
-        $userSession->device = $this->device;
-        $userSession->log_in = $this->logIn->format('Y-m-d H:i:s');
-        $userSession->expire = $this->expire ? $this->expire->format('Y-m-d H:i:s') : null;
-        $userSession->token = $this->token;
-        $userSession->comment = $this->comment;
-        return $userSession->save();
+        return (new \Models\UserSession())->init($this)->save();
     }
 }

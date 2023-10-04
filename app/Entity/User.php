@@ -8,30 +8,35 @@ use Models\UserBlock;
 class User extends Entity
 {
     public $id;
-    public $isActive;
-    public $isBlocked;
+    public $isActive = true;
+    public $isBlocked = false;
+    public $isLocked = false;
+    public $isNeedRequest = true;
     public $expire;
     public $groupId = 2; // группа "Пользователи"
     public $group;
     public $login;
     public $password;
-    public $pin;
-    public $ePin;
+    public $pin = null;
+    public $ePin = null;
     public $email;
-    public $phone;
+    public $isShowEmail = false;
+    public $phone = null;
+    public $isShowPhone = false;
     public $name;
-    public $secondName;
-    public $lastName;
-    public $genderId;
+    public $secondName = null;
+    public $lastName = null;
+    public $genderId = 1;
     public $gender;
-    public $hasPersonalDataAgreement;
-    public $hasMailingAgreement; // подписка на рассылку
+    public $hasPersonalDataAgreement = 1;
+    public $hasMailingAgreement = null; // подписка на рассылку
     public $mailingTypeId = 2; // тип рассылки html
     public $mailingType;
+    public $timezone;
     public $created;
-    public $updated;
-    public $publicKey;
-    public $privateKey;
+    public $updated = null;
+    public $publicKey = null;
+    public $privateKey = null;
 
     public static function get(array $params)
     {
@@ -53,9 +58,9 @@ class User extends Entity
         return $object;
     }
 
-    public function init(?array $data, array $properties = [])
+    public function init(?array $data)
     {
-        parent::init($data, $properties);
+        parent::init($data);
         $this->publicKey = self::getPublicKey($this->id);
         $this->privateKey = self::getPrivateKey($this->id);
         return $this;
@@ -79,6 +84,8 @@ class User extends Entity
             'id'                      => ['type' => 'int', 'field' => 'id'],
             'active'                  => ['type' => 'bool', 'field' => 'isActive'],
             'blocked'                 => ['type' => 'bool', 'field' => 'isBlocked'],
+            'locked'                  => ['type' => 'bool', 'field' => 'isLocked'],
+            'need_request'            => ['type' => 'bool', 'field' => 'isNeedRequest'],
             'expire'                  => ['type' => 'datetime', 'field' => 'expire'],
             'group_id'                => ['type' => 'int', 'field' => 'groupId'],
             'group_name'              => ['type' => 'string', 'field' => 'group'],
@@ -87,7 +94,9 @@ class User extends Entity
             'pin'                     => ['type' => 'string', 'field' => 'pin'],
             'e_pin'                   => ['type' => 'string', 'field' => 'ePin'],
             'email'                   => ['type' => 'string', 'field' => 'email'],
+            'show_email'              => ['type' => 'bool', 'field' => 'isShowEmail'],
             'phone'                   => ['type' => 'string', 'field' => 'phone'],
+            'show_phone'              => ['type' => 'bool', 'field' => 'isShowPhone'],
             'name'                    => ['type' => 'string', 'field' => 'name'],
             'second_name'             => ['type' => 'string', 'field' => 'secondName'],
             'last_name'               => ['type' => 'gender', 'field' => 'lastName'],
@@ -97,6 +106,7 @@ class User extends Entity
             'mailing'                 => ['type' => 'bool', 'field' => 'hasMailingAgreement'],
             'mailing_type_id'         => ['type' => 'int', 'field' => 'mailingTypeId'],
             'mailing_type'            => ['type' => 'string', 'field' => 'mailingType'],
+            'timezone'                => ['type' => 'int', 'field' => 'timezone'],
             'created'                 => ['type' => 'datetime', 'field' => 'created'],
             'updated'                 => ['type' => 'datetime', 'field' => 'updated'],
         ];
@@ -104,27 +114,7 @@ class User extends Entity
 
     public function save()
     {
-        $user = new \Models\User();
-        $user->id = $this->id;
-        $user->active = $this->isActive ? 1 : null;
-        $user->blocked = $this->isBlocked ? 1 : null;
-        $user->group_id = $this->groupId;
-        $user->login = $this->login;
-        $user->password = $this->password;
-        $user->pin = $this->pin;
-        $user->e_pin = $this->ePin;
-        $user->email = $this->email;
-        $user->phone = $this->phone;
-        $user->name = $this->name;
-        $user->second_name = $this->secondName;
-        $user->last_name = $this->lastName;
-        $user->gender_id = $this->genderId;
-        $user->personal_data_agreement = $this->hasPersonalDataAgreement ? 1 : null;
-        $user->mailing = $this->hasMailingAgreement ? 1 : null;
-        $user->mailing_type_id = $this->mailingTypeId;
-        $user->created = $this->created->format('Y-m-d H:i:s');
-        $user->updated = date('Y-m-d H:i:s');
-        return $user->save();
+        return (new \Models\User())->init($this)->save();
     }
 
     /**
