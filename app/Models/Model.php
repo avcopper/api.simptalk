@@ -166,7 +166,7 @@ abstract class Model
         }
         $db->sql =  "
             INSERT INTO " . self::$db_prefix . static::$db_table . " (" . implode(', ', $cols) . ") 
-            VALUES (" . ":" . implode(', :', $cols) . ")";//echo json_encode($db->sql);die;
+            VALUES (" . ":" . implode(', :', $cols) . ")";
         $res = $db->execute();
         return !empty($res) ? $db->lastInsertId() : false;
     }
